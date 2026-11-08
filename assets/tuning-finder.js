@@ -94,6 +94,19 @@
       render();
     });
   });
+  document.querySelectorAll('a[data-comparison-link]').forEach(link => {
+    link.addEventListener('click', event => {
+      const state = new URLSearchParams(link.hash.slice(1));
+      if (!tunings.has(state.get('from')) || !tunings.has(state.get('to'))) return;
+      event.preventDefault();
+      from.value = state.get('from');
+      to.value = state.get('to');
+      sharps.checked = state.get('names') === 'sharps';
+      render();
+      document.getElementById('comparison-title').focus({preventScroll: true});
+      document.getElementById('compare').scrollIntoView({block: 'start'});
+    });
+  });
   window.addEventListener('hashchange', restoreAddress);
   restoreAddress();
   document.querySelectorAll('.finder-controls, .finder-toolbar, .finder-examples').forEach(element => {

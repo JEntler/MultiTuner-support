@@ -1,135 +1,66 @@
 (() => {
-    const AudioContextType = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextType) return;
+    const players = [...document.querySelectorAll('.reference-audio')];
 
-    const player = document.querySelector('#reference-player');
-    const status = document.querySelector('#reference-status');
-    const stopButton = document.querySelector('#reference-stop');
-    const buttons = document.querySelectorAll('.reference-card button');
-    const sounds = new Map();
-    const segmentSeconds = 2;
-    let context;
-    let output;
-    let session;
+    for (const player of players) {
+        const card = player.closest('.reference-card');
+        const fullTuning = card.querySelector('.reference-return');
+        const track = card.querySelector('[data-reference-track]');
+        const errorNotice = card.querySelector('[data-reference-error]');
+        const openFile = errorNotice.querySelector('a');
+        let currentNote;
+        let request = 0;
 
-    function stop() {
-        const playing = session;
-        session = undefined;
-        if (playing) {
-            playing.note?.classList.remove('is-playing');
-            if (playing.source) {
-                playing.source.onended = null;
-                playing.source.stop();
-                playing.source.disconnect();
-                playing.envelope.disconnect();
+        function selectClip(event) {
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
+                event.shiftKey || event.altKey || !player.canPlayType('audio/mpeg')) return;
+            event.preventDefault();
+
+            const link = event.currentTarget;
+            const thisRequest = ++request;
+            const isFullTuning = link === fullTuning;
+            currentNote?.removeAttribute('aria-current');
+            currentNote = isFullTuning ? undefined : link;
+            currentNote?.setAttribute('aria-current', 'true');
+            if (isFullTuning) {
+                track.textContent = 'Full tuning';
+                fullTuning.textContent = 'Replay full tuning';
+            } else {
+                const note = link.querySelector('strong').textContent;
+                const string = link.querySelector('.reference-string').textContent;
+                track.textContent = `${note} · String ${string}`;
+                fullTuning.textContent = 'Play full tuning';
+                fullTuning.hidden = false;
             }
-            if (playing.trigger.hasAttribute('data-play')) {
-                playing.trigger.textContent = 'Play all notes';
-                playing.trigger.setAttribute('aria-label', playing.triggerLabel);
+            openFile.href = link.href;
+            errorNotice.hidden = true;
+
+            if (player.src !== link.href) {
+                player.src = link.href;
+            } else if (player.currentTime) {
+                player.currentTime = 0;
             }
-        }
-        player.hidden = true;
-        status.textContent = '';
-    }
-
-    function getSound(name) {
-        if (!sounds.has(name)) {
-            const request = fetch(`assets/tuning-audio/${name}.mp3`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Audio unavailable');
-                    return response.arrayBuffer();
-                })
-                .then(data => context.decodeAudioData(data))
-                .catch(error => {
-                    sounds.delete(name);
-                    throw error;
-                });
-            sounds.set(name, request);
-        }
-        return sounds.get(name);
-    }
-
-    function playNext(playing, buffer, index) {
-        if (session !== playing) return;
-        const note = playing.notes[index];
-        if (!note) {
-            const restoreFocus = document.activeElement === stopButton;
-            stop();
-            if (restoreFocus) playing.trigger.focus();
-            return;
+            // Call play directly during the link activation for Safari's media policy.
+            player.play()?.catch(error => {
+                if (thisRequest === request && error.name !== 'AbortError') errorNotice.hidden = false;
+            });
         }
 
-        playing.note?.classList.remove('is-playing');
-        playing.note = note;
-        note.classList.add('is-playing');
-        const noteName = note.querySelector('strong').textContent;
-        status.textContent = `Playing ${noteName} · ${playing.instrument}`;
-
-        const source = context.createBufferSource();
-        const envelope = context.createGain();
-        const start = context.currentTime + 0.015;
-        const duration = playing.notes.length === 1 ? 1.88 : 1.1;
-        const segment = Number(note.dataset.segment);
-        source.buffer = buffer;
-        source.connect(envelope);
-        envelope.connect(output);
-        envelope.gain.setValueAtTime(1, start);
-        envelope.gain.setValueAtTime(1, start + duration - 0.12);
-        envelope.gain.linearRampToValueAtTime(0, start + duration);
-        source.onended = () => {
-            playing.source = undefined;
-            source.disconnect();
-            envelope.disconnect();
-            playNext(playing, buffer, index + 1);
-        };
-        playing.source = source;
-        playing.envelope = envelope;
-        source.start(start, segment * segmentSeconds, duration);
-    }
-
-    async function play(trigger) {
-        const wasPlaying = session?.trigger === trigger;
-        stop();
-        if (wasPlaying) return;
-
-        const card = trigger.closest('.reference-card');
-        const instrument = card.querySelector('h3').textContent;
-        const allNotes = trigger.hasAttribute('data-play');
-        const notes = allNotes ? [...card.querySelectorAll('.reference-note')] : [trigger];
-        const playing = { trigger, triggerLabel: trigger.getAttribute('aria-label'), instrument, notes };
-        session = playing;
-        player.hidden = false;
-        status.textContent = `Loading sound · ${instrument}`;
-        if (allNotes) {
-            trigger.textContent = 'Stop';
-            trigger.setAttribute('aria-label', `Stop ${instrument}`);
+        for (const link of card.querySelectorAll('.reference-note, .reference-return')) {
+            link.addEventListener('click', selectClip);
         }
-
-        try {
-            if (!context) {
-                context = new AudioContextType();
-                output = context.createGain();
-                output.gain.value = 0.85;
-                output.connect(context.destination);
+        player.addEventListener('error', () => {
+            if (player.error) errorNotice.hidden = false;
+        });
+        player.addEventListener('play', () => {
+            if (player.paused) return;
+            errorNotice.hidden = true;
+            for (const other of players) {
+                if (other !== player) other.pause();
             }
-            const [, buffer] = await Promise.all([context.resume(), getSound(card.dataset.sound)]);
-            playNext(playing, buffer, 0);
-        } catch {
-            if (session !== playing) return;
-            stop();
-            player.hidden = false;
-            status.textContent = 'Audio could not play. Try the note again.';
-        }
+        });
     }
 
-    stopButton.addEventListener('click', () => {
-        const trigger = session?.trigger;
-        stop();
-        trigger?.focus();
+    window.addEventListener('pagehide', () => {
+        for (const player of players) player.pause();
     });
-    for (const button of buttons) {
-        button.disabled = false;
-        button.addEventListener('click', () => play(button));
-    }
-    window.addEventListener('pagehide', stop);
 })();

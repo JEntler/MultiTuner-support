@@ -74,26 +74,21 @@ li{color:var(--secondary);margin-bottom:12px}ol{padding-left:24px}li::marker{col
 .reference-group h2{font-size:27px;margin-bottom:12px}
 .reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .reference-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;scroll-margin-top:20px}
-.reference-card-heading{display:flex;align-items:start;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;margin-bottom:6px}
-.reference-card h3{margin:0;font-size:18px;line-height:1.45}
+.reference-card h3{margin:0 0 6px;font-size:18px;line-height:1.45}
 .reference-card p{margin:0 0 12px;font-size:14px;line-height:1.48}
-.reference-card button,.reference-player button{font:inherit;cursor:pointer}
-.reference-card button:focus-visible,.reference-player button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
-.reference-card button:disabled{cursor:default}
-.reference-card .reference-play,.reference-player button{color:var(--gold);border:1px solid var(--line);background:var(--background);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:650;min-height:36px}
 .reference-notes{list-style:none;display:flex;flex-wrap:wrap;gap:6px;padding:0;margin:0 0 12px}
 .reference-notes li{margin:0}
-.reference-note{display:grid;place-items:center;align-content:center;gap:2px;min-width:46px;min-height:53px;padding:3px 6px;line-height:1.25;background:var(--background);border:1px solid var(--line);border-radius:8px;color:var(--text)}
+.reference-note{display:grid;place-items:center;align-content:center;gap:2px;min-width:46px;min-height:53px;padding:3px 6px;line-height:1.25;background:var(--background);border:1px solid var(--line);border-radius:8px;color:var(--text);text-decoration:none}
 .reference-note .reference-string{font-size:11px;color:var(--secondary)}
-.reference-note.is-playing,.reference-note:hover:enabled,.reference-play:hover:enabled{border-color:var(--gold);background:#382c20}
+.reference-note[aria-current="true"],.reference-note:hover{border-color:var(--gold);background:#382c20}
+.reference-audio-heading{display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;min-height:24px;font-size:13px}
+.reference-return{font-size:12px}
+.reference-audio{display:block;width:100%;height:44px;margin-bottom:8px}
 .reference-source{font-size:12px;color:var(--secondary)}
-.reference-player{position:sticky;z-index:1;top:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:5px 8px 5px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.reference-player[hidden]{display:none}
-.reference-player p{margin:0;font-size:14px;color:var(--text)}
 .reference-more,.reference-page .guide-cta,.reference-page .sources{max-width:760px}
 @media(max-width:700px){.reference-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:480px){.reference-page{width:calc(100% - 40px)}.reference-card{padding:14px}.reference-notes{gap:5px}}
-@media print{.reference-jump,.reference-card .reference-play,.reference-player{display:none}.reference-card,.reference-note{background:white;color:#111}.reference-card{break-inside:avoid}.reference-note .reference-string{color:#333}.reference-card .reference-source{color:#111}}
+@media print{.reference-jump,.reference-audio-heading,.reference-audio,.reference-error{display:none}.reference-card,.reference-note{background:white;color:#111}.reference-card{break-inside:avoid}.reference-note .reference-string{color:#333}.reference-card .reference-source{color:#111}}
 
 .home-intro{display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:start;column-gap:64px;margin:0 0 42px}.home-copy h1{margin-bottom:20px}.home-copy>p:last-child{margin-bottom:0}.home-intro figure{margin:0}.home-intro img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:18px}.home-intro figcaption{font-size:11px;text-align:center;margin-top:12px}.home-intro .intro{font-size:18px}.home-intro .small{font-size:12px}#support{scroll-margin-top:24px;border-top:1px solid var(--line);padding-top:34px}#support .eyebrow{font-size:11px}
 @media(max-width:640px){.home-intro{grid-template-columns:1fr;gap:28px}.home-intro figure{max-width:145px;justify-self:center}.home-intro .intro{font-size:17px}}
